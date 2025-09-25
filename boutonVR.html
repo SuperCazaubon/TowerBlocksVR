@@ -174,7 +174,7 @@
 		if(callback) callback();
 		
 		// Désactiver OrbitControls si en VR
-		this.renderer.xr.isPresenting=!this.renderer.xr.isPresenting ;
+		this.controls.enabled=!this.renderer.xr.isPresenting ;
 		this.controls.update();
 		
         this.renderer.render(this.scene, this.camera);   
