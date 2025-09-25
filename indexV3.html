@@ -289,8 +289,8 @@
 
         this.addBlock();
         this.tick();
-        //this.updateState(this.STATES.READY);
-        this.state = this.STATES.READY;
+        this.updateState(this.STATES.READY);
+
         document.addEventListener('keydown', e => { if (e.code === "Space") this.onAction(); });
         document.addEventListener('click', () => this.onAction());
 		
@@ -380,7 +380,7 @@
       tick() {
         this.blocks[this.blocks.length - 1].tick();
         this.stage.render();
-        requestAnimationFrame(() => this.tick());
+        //requestAnimationFrame(() => this.tick());
       }
     }
 
