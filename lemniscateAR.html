@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>lemniscate AR</title>
+  <style> body { margin:0; overflow:hidden; } </style>
+</head>
+<body>
+<script type="module">
+import * as THREE from './cdn.jsdelivr.net/npm/three@0.151.3/build/three.module.js';
+import { ARButton } from './cdn.jsdelivr.net/npm/three@0.151.3/examples/jsm/webxr/ARButton.js';
+
+const global_scene = new THREE.Scene();
+const global_camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 20);
+
+const global_renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+global_renderer.setSize(window.innerWidth, window.innerHeight);
+global_renderer.xr.enabled = true;
+document.body.appendChild(global_renderer.domElement);
+
+// Bouton AR
+document.body.appendChild(ARButton.createButton(global_renderer, { requiredFeatures: ['local-floor'] }));
+
+
+ 
+
+
+
+class CustomLemniscateCurve extends THREE.Curve {
+
+	constructor( scale = 1 ) {
+		super();
+		this.scale = scale;
+	}
+
+	getPoint( t, optionalTarget = new THREE.Vector3() ) {
+		const a = 6;
+		const tx = a * Math.cos(t*2*Math.PI)/( 1 + Math.pow(Math.sin( t*2*Math.PI ),2) );
+		const ty = a * Math.sin(t*2*Math.PI)*Math.cos(t*2*Math.PI)/( 1 + Math.pow(Math.sin( t*2*Math.PI ),2) );
+		const tz = Math.sin(3*t*2*Math.PI);
+		return optionalTarget.set( tx, ty, tz ).multiplyScalar( this.scale );
+	}
+}
+
+const global_Lemniscate_path = new CustomLemniscateCurve( 1 );
+const global_Lemniscate_tubularSegment= 64; 
+const global_Lemniscate_radius = 0.4;        /* rayon du tube */
+const global_Lemniscate_radialSegments = 4  /* nombre de cotés de la section du tube */
+const global_Lemniscate_closed = true;    /* tube fermé ou pas */
+const global_Lemniscate_geometry = new THREE.TubeGeometry( global_Lemniscate_path, global_Lemniscate_tubularSegment, global_Lemniscate_radius , global_Lemniscate_radialSegments, global_Lemniscate_closed );
+const global_Lemniscate_material = new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true  } );
+const global_Lemniscate_mesh = new THREE.Mesh( global_Lemniscate_geometry, global_Lemniscate_material );
+global_Lemniscate_mesh.position.set(0, 0, -10);
+global_scene.add( global_Lemniscate_mesh );
+
+
+// Exemple : un cube devant la caméra
+const global_cube_geometry = new THREE.BoxGeometry(0.1,0.1,0.1);
+const global_cube_material = new THREE.MeshNormalMaterial();
+const global_cube_ = new THREE.Mesh(global_cube_geometry, global_cube_material);
+global_cube_.position.set(0, 0, -2); // 1 m devant
+global_scene.add(global_cube_);
+ 
+
+// Animation XR
+global_renderer.setAnimationLoop(() => {
+	global_cube_.rotation.y += 0.01;
+	global_Lemniscate_mesh.rotation.x += 0.01;
+	global_Lemniscate_mesh.rotation.z += 0.01;
+	global_renderer.render(global_scene, global_camera);
+});
+</script>
+</body>
+</html>
