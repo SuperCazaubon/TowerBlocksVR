@@ -109,7 +109,7 @@
     class Stage {
       constructor() {
         this.container = document.getElementById('game');
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor('#D0CBC7', 1);
 		this.renderer.xr.enabled = true;
@@ -136,8 +136,9 @@
         this.onResize();
       }
 
-      render() {
+      render(callback) {
         this.camera.lookAt(this.cameraTarget);
+		if(callback) callback();
         this.renderer.render(this.scene, this.camera);   
       }
 
@@ -288,8 +289,8 @@
 
         this.addBlock();
         this.tick();
-        this.updateState(this.STATES.READY);
-
+        //this.updateState(this.STATES.READY);
+        this.state = this.STATES.READY;
         document.addEventListener('keydown', e => { if (e.code === "Space") this.onAction(); });
         document.addEventListener('click', () => this.onAction());
 		
