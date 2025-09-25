@@ -18,41 +18,14 @@
     font-family: monospace;
     white-space: pre-wrap;
   }
-  #ios-permission {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    z-index: 10000;
-    display: none;
-  }
-  #ios-permission button {
-    background: #4CAF50;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    margin-top: 15px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
 </style>
 </head>
 <body>
-<div id="ios-permission">
-  <p>Cette expérience nécessite l'accès aux capteurs de mouvement.</p>
-  <button id="request-motion-permission">Autoriser l'accès</button>
-</div>
-
 <div id="hud" style="
   position:fixed;
-  top:200px; left:225px;
+  top:200px; left:200px;
   color:white;
-  font-size:7px;
+  font-size:8px;
   background:rgba(0,0,0,0.5);
   padding:5px;
   border-radius:5px;
@@ -73,33 +46,6 @@ var global_rotationRate = {alpha:0, beta:0, gamma:0};
 var global_position = {x:0, y:0, z:0};
 var global_velocity = {x:0, y:0, z:0};
 var global_lastTimestamp = null;
-var controlsEnabled = false;
-
-// Gestion des permissions iOS
-function checkIOSPermissions() {
-  // Vérifier si nous sommes sur iOS et si l'API de permission existe
-  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-    document.getElementById('ios-permission').style.display = 'block';
-    
-    document.getElementById('request-motion-permission').addEventListener('click', function() {
-      DeviceOrientationEvent.requestPermission()
-        .then(permissionState => {
-          if (permissionState === 'granted') {
-            document.getElementById('ios-permission').style.display = 'none';
-            controlsEnabled = true;
-            initControls();
-          }
-        })
-        .catch(console.error);
-    });
-    
-    return false;
-  }
-  
-  // Sur Android, activer directement les contrôles
-  controlsEnabled = true;
-  return true;
-}
 
 // --- Code Three.js ---
 import * as THREE from "./cdn.jsdelivr.net/npm/three@0.151.3/build/three.module.js";
@@ -201,12 +147,8 @@ global_scene.add(global_camera);
  
 
 // --- Contrôles orientation ---
-let global_controls = null;
-
-function initControls() {
-  global_controls = new DeviceOrientationControls(global_camera);
-  global_controls.enabled = controlsEnabled;
-}
+const global_controls = new DeviceOrientationControls(global_camera);
+global_controls.enabled = true;
 
 const global_raycaster = new THREE.Raycaster();
 const global_pointer = new THREE.Vector2(0, 0); // centre de l'écran
@@ -246,10 +188,15 @@ function getGPS(){
 	}
 }
 
+
+
+
 function resetPosition() {
   global_position = {x:0, y:0, z:0};
   global_velocity = {x:0, y:0, z:0};
 }
+
+
 
 function updateHUD() {
   const pos = global_camera.position;
@@ -268,13 +215,6 @@ function updateHUD() {
   document.getElementById('hud').innerText += `GPS=(${global_latitude?.toFixed(1)}, ${global_longitude?.toFixed(1)}, ${global_altitude?.toFixed(1)}, ${global_accuracy?.toFixed(1)} ) \n`;
 }
 
-// Vérifier les permissions avant d'initialiser
-const permissionsGranted = checkIOSPermissions();
-
-// Initialiser les contrôles si les permissions sont déjà accordées (Android)
-if (permissionsGranted) {
-  initControls();
-}
 
 // --- Animation ---
 function animate(){
@@ -282,16 +222,14 @@ function animate(){
   getGPS();
   global_cube.rotation.x += 0.01;
   global_cube.rotation.y += 0.01;
-  
-  if (global_controls && controlsEnabled) {
-    global_controls.update();
-  }
-  
+  global_controls.update();
   global_effect.render(global_scene,global_camera);
   checkGaze();
   updateHUD();
 }
 animate();
+
+
 
 // Gestion globale des erreurs
 window.addEventListener('error', e => {
@@ -307,11 +245,9 @@ window.addEventListener('unhandledrejection', e => {
 
 // --- DeviceMotion ---
 window.addEventListener('devicemotion', (e) => {
-  if (!controlsEnabled) return; // Ne pas traiter les événements si les contrôles ne sont pas activés
-  
   const t = e.timeStamp;
-  global_acceleration = e.acceleration;
-  global_rotationRate = e.rotationRate;
+  global_acceleration = event.acceleration;
+  global_rotationRate = event.rotationRate;
   if(global_lastTimestamp) {
     const dt = (t - global_lastTimestamp)/1000; // s
     ['x','y','z'].forEach(axis=>{
