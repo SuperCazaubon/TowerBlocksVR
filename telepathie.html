@@ -140,49 +140,13 @@ const global_floor = new THREE.Mesh(
 global_floor.rotation.x = -Math.PI/2;
 global_scene.add(global_floor);
 
-
-// --- Cube central  ---
+// --- Cube central plus grand ---
 const global_cube = new THREE.Mesh(
   new THREE.BoxGeometry(2,2,2),
   new THREE.MeshPhongMaterial({color:0xff5533})
 );
 global_cube.position.set(0,1.6,-3);
 global_scene.add(global_cube);
-
-
-// Matériaux
-const global_materialGreen = new THREE.MeshPhongMaterial({color:0x006400}); // vert foncé
-const global_materialSky  = new THREE.MeshPhongMaterial({color:0x87CEFA}); // bleu clair
-const global_materialYellow = new THREE.MeshPhongMaterial({color:0xffff00}); // jaune
-
-// --- Cylindres bleu clair au-dessus du cube ---
-const global_cubeSide = 2;
-const global_cylRadius = Math.sqrt(2) * global_cubeSide;
-const global_cylHeight = global_cubeSide/2;
-
-const global_cylinder_Dessus = new THREE.Mesh(
-  new THREE.CylinderGeometry(global_cylRadius, global_cylRadius, global_cylHeight, 32),
-  global_materialSky
-);
-
-global_cylinder_Dessus.position.set(
-  global_cube.position.x,
-  global_cube.position.y + global_cylHeight, 
-  global_cube.position.z
-);
-global_scene.add(global_cylinder_Dessus);
-
-const global_cylinder_Dessous = new THREE.Mesh(
-  new THREE.CylinderGeometry(global_cylRadius, global_cylRadius, global_cylHeight, 32),
-  global_materialGreen
-);
-
-global_cylinder_Dessous.position.set(
-  global_cube.position.x,
-  global_cube.position.y - global_cylHeight, 
-  global_cube.position.z
-);
-global_scene.add(global_cylinder_Dessous);
 
 
 // --- Repères visuels ---
@@ -247,34 +211,13 @@ function initControls() {
 const global_raycaster = new THREE.Raycaster();
 const global_pointer = new THREE.Vector2(0, 0); // centre de l'écran
 
-
 function checkGaze() {
   global_raycaster.setFromCamera(global_pointer, global_camera);
-
-  // Vérification cube
-  const intersectsCube = global_raycaster.intersectObject(global_cube);
-  if (intersectsCube.length > 0) {
+  const intersects = global_raycaster.intersectObject(global_cube);
+  if (intersects.length > 0) {
     global_cube.scale.set(2, 2, 2); // grossit si regardé
   } else {
     global_cube.scale.set(1, 1, 1);
-  }
-
-  // Vérification cylindre dessous
-  const intersectsDessous = global_raycaster.intersectObject(global_cylinder_Dessous);
-  if (intersectsDessous.length > 0) {
-    global_cylinder_Dessous.material = global_materialYellow;
-    global_camera.position.z += 0.1; // recule
-  } else {
-    global_cylinder_Dessous.material = global_materialGreen;
-  }
-
-  // Vérification cylindre dessus
-  const intersectsDessus = global_raycaster.intersectObject(global_cylinder_Dessus);
-  if (intersectsDessus.length > 0) {
-    global_cylinder_Dessus.material = global_materialYellow;
-    global_camera.position.z -= 0.1; // avance
-  } else {
-    global_cylinder_Dessus.material = global_materialSky;
   }
 }
 
@@ -339,10 +282,6 @@ function animate(){
   getGPS();
   global_cube.rotation.x += 0.01;
   global_cube.rotation.y += 0.01;
-
-  global_labelX.lookAt(global_camera.position);
-  global_labelY.lookAt(global_camera.position);
-  global_labelZ.lookAt(global_camera.position);
   
   if (global_controls && controlsEnabled) {
     global_controls.update();
